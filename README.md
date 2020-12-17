@@ -1,3 +1,3 @@
-Example Microservice
-====================
-This is an example "microservice" with some endpoints that use Postgres to serve as a demonstration of Kurtosis functionality. All the Kurtosis client libraries come with example tests that use the image of this service to show how Kurtosis works.
+Example Microservices
+=====================
+This repo contains two microservices for demonstrating Kurtosis functionality - a datastore that accepts simple HTTP requests, and an API service that uses it. All the Kurtosis client libraries come with example testsuites that use these images.
