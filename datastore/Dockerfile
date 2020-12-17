@@ -9,6 +9,6 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN go build -o example-microservice main.go
+RUN go build -o datastore.bin ./datastore/main.go
 
-CMD example-microservice --config ${CONFIG_FILEPATH}
+CMD ./datastore.bin
