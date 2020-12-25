@@ -1,4 +1,4 @@
-## TBD
+## 1.0.4
 * Fix silent bugs that I didn't notice before I added CI!
 
 ## 1.0.3
