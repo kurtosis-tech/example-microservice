@@ -1,0 +1,57 @@
+version: 2.1
+
+parameters:
+  # To upgrade the Docker Engine version, see which versions are supported at: https://circleci.com/docs/2.0/building-docker-images/#docker-version
+  docker-engine-version:
+    type: string
+    default: 19.03.13
+  # To upgrade the CircleCI base image, see https://hub.docker.com/r/cimg/base/tags?page=1&ordering=last_updated
+  circleci-base-image:
+    type: string
+    default: cimg/base:2020.12
+
+# NOTE: According to https://circleci.com/docs/2.0/building-docker-images , the CircleCI base images come with the Docker CLI preinstalled so we don't need to install it
+# We do still need to run `setup_remote_dockder` to get a Docker Engine, however
+jobs:
+  validate:
+    docker:
+      - image: "<< pipeline.parameters.circleci-base-image >>"
+        auth:
+          username: ${DOCKER_USERNAME}
+          password: ${DOCKER_PASSWORD}
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: "<< pipeline.parameters.docker-engine-version>>"
+      - run: scripts/build.sh build
+
+  push_docker_image:
+    docker:
+      - image: "<< pipeline.parameters.circleci-base-image >>"
+        auth:
+          username: ${DOCKER_USERNAME}
+          password: ${DOCKER_PASSWORD}
+    steps:
+      - checkout
+      - setup_remote_docker:
+          version: "<< pipeline.parameters.docker-engine-version>>"
+      - run: docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+      - run: scripts/build.sh publish
+
+workflows:
+  main:
+    jobs:
+      - validate:
+          filters:
+            branches:
+              ignore:
+                - develop
+                - master
+      - push_docker_image:
+          context:
+            - docker-user
+          filters:
+            branches:
+              ignore: /.*/
+            tags: 
+              only: /^[0-9]+\.[0-9]+\.[0-9]+$/
