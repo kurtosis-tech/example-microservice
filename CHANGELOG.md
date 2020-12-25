@@ -1,3 +1,6 @@
+## 1.0.5
+* Use the `go` Docker image only for building, and use Alpine for execution; leads to a size reduction of 396MB -> 13MB!
+
 ## 1.0.4
 * Fix silent bugs that I didn't notice before I added CI!
 
