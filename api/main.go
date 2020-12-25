@@ -53,13 +53,13 @@ func main() {
 
 	configFileBytes, err := ioutil.ReadFile(*configFilepathArg)
 	if err != nil {
-		log.Error("An error occurred reading the config filepath: %v", err)
+		log.Errorf("An error occurred reading the config filepath: %v", err)
 		os.Exit(failureCode)
 	}
 
 	var config serverConfig
 	if err := json.Unmarshal(configFileBytes, &config); err != nil {
-		log.Error("An error occurred deserializing the config file: %v", err)
+		log.Errorf("An error occurred deserializing the config file: %v", err)
 		os.Exit(failureCode)
 	}
 
@@ -101,7 +101,7 @@ func getNewPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 		// Make sure the person doesn't already exist
 		exists, err := client.Exists(key)
 		if err != nil {
-			log.Error("An error occurred checking if the key already exists: %v", err)
+			log.Errorf("An error occurred checking if the key already exists: %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		if exists {
@@ -113,7 +113,7 @@ func getNewPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 		}
 		jsonBytes, err := json.Marshal(newPerson)
 		if err != nil {
-			log.Error("An error occurred marshalling the new person to JSON: %v", err)
+			log.Errorf("An error occurred marshalling the new person to JSON: %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		jsonStr := string(jsonBytes)
@@ -134,7 +134,7 @@ func getGetPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 		// If the person doesn't already exist, throw a 404
 		exists, err := client.Exists(key)
 		if err != nil {
-			log.Error("An error occurred checking if the key already exists: %v", err)
+			log.Errorf("An error occurred checking if the key already exists: %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		if !exists {
@@ -143,7 +143,7 @@ func getGetPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 
 		value, err := client.Get(key)
 		if err != nil {
-			log.Error("An error occurred getting data for person key '%v': %v", key, err)
+			log.Errorf("An error occurred getting data for person key '%v': %v", key, err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		return c.String(http.StatusOK, value)
@@ -161,7 +161,7 @@ func getIncrementBooksReadHandler(client *datastore_client.DatastoreClient) func
 		// Make sure the person exists
 		exists, err := client.Exists(key)
 		if err != nil {
-			log.Error("An error occurred checking if the key already exists: %v", err)
+			log.Errorf("An error occurred checking if the key already exists: %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		if !exists {
@@ -170,25 +170,25 @@ func getIncrementBooksReadHandler(client *datastore_client.DatastoreClient) func
 
 		value, err := client.Get(key)
 		if err != nil {
-			log.Error("An error occurred getting data for person key '%v': %v", key, err)
+			log.Errorf("An error occurred getting data for person key '%v': %v", key, err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
 		var person person
 		if err := json.Unmarshal([]byte(value), &person); err != nil {
-			log.Error("An error occurred deserializing person JSON for key '%v': %v", key, err)
+			log.Errorf("An error occurred deserializing person JSON for key '%v': %v", key, err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
 		person.BooksRead = person.BooksRead + 1
 		updatedPersonBytes, err := json.Marshal(person)
 		if err != nil {
-			log.Error("An error occurred serializing the updated person JSON for key '%v': %v", key, err)
+			log.Errorf("An error occurred serializing the updated person JSON for key '%v': %v", key, err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 
 		if err := client.Upsert(key, string(updatedPersonBytes)); err != nil {
-			log.Error("An error occurred upserting the updated person JSON for key '%v': %v", key, err)
+			log.Errorf("An error occurred upserting the updated person JSON for key '%v': %v", key, err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		return nil
