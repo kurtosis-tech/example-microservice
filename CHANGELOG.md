@@ -1,4 +1,4 @@
-## TBD
+## 1.0.1
 * Add CircleCI
 * Refactored buildscript to do both `build` and `publish`
 * Add `.dockerignore`, and a check in the buildscript to ensure it exists
