@@ -1,3 +1,6 @@
+## TBD
+* Add `go test` to build.sh, to force building of Go files
+
 ## 1.0.2
 * Bugfix in buildscript
 * Add `.dockerignore` file

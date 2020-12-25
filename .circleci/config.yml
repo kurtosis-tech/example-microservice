@@ -5,17 +5,17 @@ parameters:
   docker-engine-version:
     type: string
     default: 19.03.13
-  # To upgrade the CircleCI base image, see https://hub.docker.com/r/cimg/base/tags?page=1&ordering=last_updated
-  circleci-base-image:
+  # To upgrade, see: https://hub.docker.com/r/cimg/go/tags?page=1&ordering=last_updated
+  circleci-go-image:
     type: string
-    default: cimg/base:2020.12
+    default: cimg/go:1.15
 
 # NOTE: According to https://circleci.com/docs/2.0/building-docker-images , the CircleCI base images come with the Docker CLI preinstalled so we don't need to install it
 # We do still need to run `setup_remote_dockder` to get a Docker Engine, however
 jobs:
   validate:
     docker:
-      - image: "<< pipeline.parameters.circleci-base-image >>"
+      - image: "<< pipeline.parameters.circleci-go-image >>"
         auth:
           username: ${DOCKER_USERNAME}
           password: ${DOCKER_PASSWORD}
@@ -27,7 +27,7 @@ jobs:
 
   push_docker_image:
     docker:
-      - image: "<< pipeline.parameters.circleci-base-image >>"
+      - image: "<< pipeline.parameters.circleci-go-image >>"
         auth:
           username: ${DOCKER_USERNAME}
           password: ${DOCKER_PASSWORD}

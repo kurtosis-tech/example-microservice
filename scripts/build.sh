@@ -50,6 +50,14 @@ if "${do_build}"; then
         exit 1
     fi
 
+    echo "Running unit tests..."
+    if ! go test "${root_dirpath}/..."; then
+        echo 'Tests failed!'
+        exit 1
+    else
+        echo "Tests succeeded"
+    fi
+
     echo "Building API image..."
     docker build -t "${API_IMAGE_NAME}" -f "${root_dirpath}/api/Dockerfile" "${root_dirpath}"
     echo "API image built"
