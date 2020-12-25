@@ -1,4 +1,4 @@
-## TBD
+## 1.0.2
 * Bugfix in buildscript
 * Add `.dockerignore` file
 
