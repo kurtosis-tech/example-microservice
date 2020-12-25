@@ -1,6 +1,6 @@
 set -euo pipefail
 script_dirpath="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
-root_dirpath"$(dirname "${script_dirpath}")"
+root_dirpath="$(dirname "${script_dirpath}")"
 
 API_IMAGE_NAME="kurtosistech/example-microservices_api"
 DATASTORE_IMAGE_NAME="kurtosistech/example-microservices_datastore"
