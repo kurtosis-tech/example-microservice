@@ -1,3 +1,6 @@
+## TBD
+* Fix silent bugs that I didn't notice before I added CI!
+
 ## 1.0.3
 * Add `go test` to build.sh, to force building of Go files
 

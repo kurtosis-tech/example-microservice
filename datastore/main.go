@@ -38,7 +38,7 @@ func main() {
 
 		bodyBytes,err := ioutil.ReadAll(body)
 		if err != nil {
-			log.Error("An error occurred reading the request body: %v", err)
+			log.Errorf("An error occurred reading the request body: %v", err)
 			return echo.NewHTTPError(http.StatusInternalServerError)
 		}
 		value := string(bodyBytes)
