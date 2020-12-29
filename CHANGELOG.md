@@ -1,3 +1,6 @@
+## TBD
+* Make `DatastoreClient` time out requests after 2 seconds (low timeout, so tests that use timeouts run quickly)
+
 ## 1.0.5
 * Use the `go` Docker image only for building, and use Alpine for execution; leads to a size reduction of 396MB -> 13MB!
 
