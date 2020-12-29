@@ -6,21 +6,33 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
 	textContentType = "text/plain"
 
 	keyEndpoint = "key"
+
+	// Use low timeout, so that tests that need timeouts (like network partition tests) will complete quickly
+	timeoutSeconds = 2 * time.Second
 )
 
 type DatastoreClient struct {
+	httpClient http.Client
 	ipAddr string
 	port int
 }
 
 func NewDatastoreClient(ipAddr string, port int) *DatastoreClient {
-	return &DatastoreClient{ipAddr: ipAddr, port: port}
+	httpClient := http.Client{
+		Timeout: timeoutSeconds,
+	}
+	return &DatastoreClient{
+		httpClient: httpClient,
+		ipAddr: ipAddr,
+		port: port,
+	}
 }
 
 /*
@@ -28,7 +40,7 @@ Checks if a given key Exists
 */
 func (client DatastoreClient) Exists(key string) (bool, error) {
 	url := client.getUrlForKey(key)
-	resp, err := http.Get(url)
+	resp, err := client.httpClient.Get(url)
 	if err != nil {
 		return false, stacktrace.Propagate(err, "An error occurred requesting data for key '%v'", key)
 	}
@@ -46,7 +58,7 @@ Gets the value for a given key from the datastore
  */
 func (client DatastoreClient) Get(key string) (string, error) {
 	url := client.getUrlForKey(key)
-	resp, err := http.Get(url)
+	resp, err := client.httpClient.Get(url)
 	if err != nil {
 		return "", stacktrace.Propagate(err, "An error occurred requesting data for key '%v'", key)
 	}
@@ -68,7 +80,7 @@ Puts a value for the given key into the datastore
  */
 func (client DatastoreClient) Upsert(key string, value string) error {
 	url := client.getUrlForKey(key)
-	resp, err := http.Post(url, textContentType, strings.NewReader(value))
+	resp, err := client.httpClient.Post(url, textContentType, strings.NewReader(value))
 	if err != nil {
 		return stacktrace.Propagate(err, "An error requesting to upsert data '%v' to key '%v'", value, key)
 	}
