@@ -33,6 +33,16 @@ type serverConfig struct {
 	DatastorePort int	`json:"datastorePort"`
 }
 
+func (config serverConfig) validate() error {
+	if config.DatastoreIp == "" {
+		return stacktrace.NewError("No datastore IP provided")
+	}
+	if config.DatastorePort == 0 {
+		return stacktrace.NewError("No datastore port provided")
+	}
+	return nil
+}
+
 // Fields are public so we can marshal them to JSON
 type person struct {
 	BooksRead int		`json:"booksRead"`
@@ -60,6 +70,10 @@ func main() {
 	var config serverConfig
 	if err := json.Unmarshal(configFileBytes, &config); err != nil {
 		log.Errorf("An error occurred deserializing the config file: %v", err)
+		os.Exit(failureCode)
+	}
+	if err := config.validate(); err != nil {
+		log.Errorf("An error occurred validating the config file: %v", err)
 		os.Exit(failureCode)
 	}
 

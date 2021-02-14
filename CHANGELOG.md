@@ -1,3 +1,6 @@
+## 1.0.7
+* Add validation to the API service's config file
+
 ## 1.0.6
 * Make `DatastoreClient` time out requests after 2 seconds (low timeout, so tests that use timeouts run quickly)
 
