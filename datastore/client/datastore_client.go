@@ -1,4 +1,4 @@
-package datastore_client
+package client
 
 import (
 	"fmt"
