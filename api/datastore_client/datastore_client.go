@@ -3,6 +3,7 @@ package datastore_client
 import (
 	"fmt"
 	"github.com/palantir/stacktrace"
+	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -16,12 +17,15 @@ const (
 
 	// Use low timeout, so that tests that need timeouts (like network partition tests) will complete quickly
 	timeoutSeconds = 2 * time.Second
+
+	healthcheckUrlSlug = "health"
+	healthyValue       = "healthy"
 )
 
 type DatastoreClient struct {
 	httpClient http.Client
-	ipAddr string
-	port int
+	ipAddr     string
+	port       int
 }
 
 func NewDatastoreClient(ipAddr string, port int) *DatastoreClient {
@@ -30,8 +34,8 @@ func NewDatastoreClient(ipAddr string, port int) *DatastoreClient {
 	}
 	return &DatastoreClient{
 		httpClient: httpClient,
-		ipAddr: ipAddr,
-		port: port,
+		ipAddr:     ipAddr,
+		port:       port,
 	}
 }
 
@@ -55,7 +59,7 @@ func (client DatastoreClient) Exists(key string) (bool, error) {
 
 /*
 Gets the value for a given key from the datastore
- */
+*/
 func (client DatastoreClient) Get(key string) (string, error) {
 	url := client.getUrlForKey(key)
 	resp, err := client.httpClient.Get(url)
@@ -77,7 +81,7 @@ func (client DatastoreClient) Get(key string) (string, error) {
 
 /*
 Puts a value for the given key into the datastore
- */
+*/
 func (client DatastoreClient) Upsert(key string, value string) error {
 	url := client.getUrlForKey(key)
 	resp, err := client.httpClient.Post(url, textContentType, strings.NewReader(value))
@@ -92,4 +96,32 @@ func (client DatastoreClient) Upsert(key string, value string) error {
 
 func (client DatastoreClient) getUrlForKey(key string) string {
 	return fmt.Sprintf("http://%v:%v/%v/%v", client.ipAddr, client.port, keyEndpoint, key)
+}
+
+/*
+Checks if the service is available
+*/
+func (client DatastoreClient) IsAvailable() bool {
+	url := fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
+	resp, err := http.Get(url)
+	if err != nil {
+		logrus.Debugf("An HTTP error occurred when polling the endpoint: %v", err)
+		return false
+	}
+	if resp.StatusCode != http.StatusOK {
+		logrus.Debugf("Received non-OK status code: %v", resp.StatusCode)
+		return false
+	}
+
+	body := resp.Body
+	defer body.Close()
+
+	bodyBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		logrus.Debugf("An error occurred reading the response body: %v", err)
+		return false
+	}
+	bodyStr := string(bodyBytes)
+
+	return bodyStr == healthyValue
 }
