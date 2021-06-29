@@ -1,3 +1,6 @@
+## TBD
+* Added a Kurtosis Module for starting the services
+
 ## 1.0.7
 * Add validation to the API service's config file
 

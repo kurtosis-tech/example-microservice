@@ -1,0 +1,12 @@
+syntax = "proto3";
+package datastore_module_api;
+
+import "google/protobuf/empty.proto";
+
+service DatastoreModuleService {
+  rpc StartDatastoreService(google.protobuf.Empty) returns (StartDatastoreServiceResponse) {};
+}
+
+message StartDatastoreServiceResponse {
+  string ip_port = 1;
+}
