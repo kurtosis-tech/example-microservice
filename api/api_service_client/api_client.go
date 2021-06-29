@@ -1,4 +1,4 @@
-package client
+package api_service_client
 
 import (
 	"encoding/json"
@@ -39,10 +39,6 @@ func NewAPIClient(ipAddr string, port int) *APIClient {
 		ipAddr:     ipAddr,
 		port:       port,
 	}
-}
-
-func (client *APIClient) getPersonUrlForId(id int) string {
-	return fmt.Sprintf("http://%v:%v/%v/%v", client.ipAddr, client.port, personEndpoint, id)
 }
 
 func (client *APIClient) AddPerson(id int) error {
@@ -95,7 +91,7 @@ func (client *APIClient) IncrementBooksRead(id int) error {
 /*
 Wait for healthy response
 */
-func (client *APIClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds int) error {
+func (client *APIClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds uint32) error {
 
 	var(
 		url = fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
@@ -111,12 +107,18 @@ func (client *APIClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds
 		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}
 
+	if err != nil {
+		return stacktrace.Propagate(err,
+			"The HTTP endpoint '%v' didn't return a success code, even after %v retries with %v milliseconds in between retries",
+			url, retries, retriesDelayMilliseconds)
+	}
+
 	body := resp.Body
 	defer body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		return stacktrace.NewError("An error occurred reading the response body: %v", err)
+		return stacktrace.Propagate(err, "An error occurred reading the response body")
 	}
 	bodyStr := string(bodyBytes)
 
@@ -125,6 +127,10 @@ func (client *APIClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds
 	}
 
 	return nil
+}
+
+func (client *APIClient) getPersonUrlForId(id int) string {
+	return fmt.Sprintf("http://%v:%v/%v/%v", client.ipAddr, client.port, personEndpoint, id)
 }
 
 func (client *APIClient) makeHttpGetRequest(url string) (*http.Response, error){

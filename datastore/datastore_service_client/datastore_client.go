@@ -1,4 +1,4 @@
-package client
+package datastore_service_client
 
 import (
 	"fmt"
@@ -100,7 +100,7 @@ func (client *DatastoreClient) getUrlForKey(key string) string {
 /*
 Wait for healthy response
 */
-func (client *DatastoreClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds int) error {
+func (client *DatastoreClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds uint32) error {
 
 	var(
 		url = fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
@@ -116,12 +116,18 @@ func (client *DatastoreClient) WaitForHealthy(retries uint32, retriesDelayMillis
 		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}
 
+	if err != nil {
+		return stacktrace.Propagate(err,
+			"The HTTP endpoint '%v' didn't return a success code, even after %v retries with %v milliseconds in between retries",
+			url, retries, retriesDelayMilliseconds)
+	}
+
 	body := resp.Body
 	defer body.Close()
 
 	bodyBytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		return stacktrace.NewError("An error occurred reading the response body: %v", err)
+		return stacktrace.Propagate(err, "An error occurred reading the response body")
 	}
 	bodyStr := string(bodyBytes)
 
