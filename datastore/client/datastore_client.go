@@ -3,7 +3,6 @@ package client
 import (
 	"fmt"
 	"github.com/palantir/stacktrace"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -42,7 +41,7 @@ func NewDatastoreClient(ipAddr string, port int) *DatastoreClient {
 /*
 Checks if a given key Exists
 */
-func (client DatastoreClient) Exists(key string) (bool, error) {
+func (client *DatastoreClient) Exists(key string) (bool, error) {
 	url := client.getUrlForKey(key)
 	resp, err := client.httpClient.Get(url)
 	if err != nil {
@@ -60,7 +59,7 @@ func (client DatastoreClient) Exists(key string) (bool, error) {
 /*
 Gets the value for a given key from the datastore
 */
-func (client DatastoreClient) Get(key string) (string, error) {
+func (client *DatastoreClient) Get(key string) (string, error) {
 	url := client.getUrlForKey(key)
 	resp, err := client.httpClient.Get(url)
 	if err != nil {
@@ -82,7 +81,7 @@ func (client DatastoreClient) Get(key string) (string, error) {
 /*
 Puts a value for the given key into the datastore
 */
-func (client DatastoreClient) Upsert(key string, value string) error {
+func (client *DatastoreClient) Upsert(key string, value string) error {
 	url := client.getUrlForKey(key)
 	resp, err := client.httpClient.Post(url, textContentType, strings.NewReader(value))
 	if err != nil {
@@ -94,23 +93,27 @@ func (client DatastoreClient) Upsert(key string, value string) error {
 	return nil
 }
 
-func (client DatastoreClient) getUrlForKey(key string) string {
+func (client *DatastoreClient) getUrlForKey(key string) string {
 	return fmt.Sprintf("http://%v:%v/%v/%v", client.ipAddr, client.port, keyEndpoint, key)
 }
 
 /*
-Checks if the service is available
+Wait for healthy response
 */
-func (client DatastoreClient) IsAvailable() bool {
-	url := fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
-	resp, err := http.Get(url)
-	if err != nil {
-		logrus.Debugf("An HTTP error occurred when polling the endpoint: %v", err)
-		return false
-	}
-	if resp.StatusCode != http.StatusOK {
-		logrus.Debugf("Received non-OK status code: %v", resp.StatusCode)
-		return false
+func (client *DatastoreClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds int) error {
+
+	var(
+		url = fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
+		resp *http.Response
+		err error
+	)
+
+	for i := uint32(0); i < retries; i++ {
+		resp, err = client.makeHttpGetRequest(url)
+		if err == nil  {
+			break
+		}
+		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}
 
 	body := resp.Body
@@ -118,10 +121,24 @@ func (client DatastoreClient) IsAvailable() bool {
 
 	bodyBytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		logrus.Debugf("An error occurred reading the response body: %v", err)
-		return false
+		return stacktrace.NewError("An error occurred reading the response body: %v", err)
 	}
 	bodyStr := string(bodyBytes)
 
-	return bodyStr == healthyValue
+	if bodyStr != healthyValue {
+		return stacktrace.NewError("Expected response body text '%v' from endpoint '%v' but got '%v' instead", healthyValue, url, bodyStr)
+	}
+
+	return nil
+}
+
+func (client *DatastoreClient) makeHttpGetRequest(url string) (*http.Response, error){
+	resp, err := client.httpClient.Get(url)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An HTTP error occurred when sending GET request to endpoint '%v'", url)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, stacktrace.NewError("Received non-OK status code: '%v'", resp.StatusCode)
+	}
+	return resp, nil
 }

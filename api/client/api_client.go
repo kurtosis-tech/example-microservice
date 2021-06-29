@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/palantir/stacktrace"
-	"github.com/sirupsen/logrus"
 	"io/ioutil"
 	"net/http"
 	"time"
@@ -93,16 +92,23 @@ func (client *APIClient) IncrementBooksRead(id int) error {
 	return nil
 }
 
-func (client *APIClient) IsAvailable() bool {
-	url := fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
-	resp, err := client.httpClient.Get(url)
-	if err != nil {
-		logrus.Debugf("An HTTP error occurred when polliong the health endpoint: %v", err)
-		return false
-	}
-	if resp.StatusCode != http.StatusOK {
-		logrus.Debugf("Received non-OK status code: %v", resp.StatusCode)
-		return false
+/*
+Wait for healthy response
+*/
+func (client *APIClient) WaitForHealthy(retries uint32, retriesDelayMilliseconds int) error {
+
+	var(
+		url = fmt.Sprintf("http://%v:%v/%v", client.ipAddr, client.port, healthcheckUrlSlug)
+		resp *http.Response
+		err error
+	)
+
+	for i := uint32(0); i < retries; i++ {
+		resp, err = client.makeHttpGetRequest(url)
+		if err == nil  {
+			break
+		}
+		time.Sleep(time.Duration(retriesDelayMilliseconds) * time.Millisecond)
 	}
 
 	body := resp.Body
@@ -110,10 +116,24 @@ func (client *APIClient) IsAvailable() bool {
 
 	bodyBytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		logrus.Debugf("An error occurred reading the response body: %v", err)
-		return false
+		return stacktrace.NewError("An error occurred reading the response body: %v", err)
 	}
 	bodyStr := string(bodyBytes)
 
-	return bodyStr == healthyValue
+	if bodyStr != healthyValue {
+		return stacktrace.NewError("Expected response body text '%v' from endpoint '%v' but got '%v' instead", healthyValue, url, bodyStr)
+	}
+
+	return nil
+}
+
+func (client *APIClient) makeHttpGetRequest(url string) (*http.Response, error){
+	resp, err := client.httpClient.Get(url)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "An HTTP error occurred when sending GET request to endpoint '%v'", url)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, stacktrace.NewError("Received non-OK status code: '%v'", resp.StatusCode)
+	}
+	return resp, nil
 }
