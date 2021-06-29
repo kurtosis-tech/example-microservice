@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"github.com/kurtosis-tech/example-microservice/api/datastore_client"
+	"github.com/kurtosis-tech/example-microservice/datastore/datastore_service_client"
 	"github.com/labstack/echo"
 	"github.com/labstack/gommon/log"
 	"github.com/palantir/stacktrace"
@@ -77,7 +77,7 @@ func main() {
 		os.Exit(failureCode)
 	}
 
-	client := datastore_client.NewDatastoreClient(config.DatastoreIp, config.DatastorePort)
+	client := datastore_service_client.NewDatastoreClient(config.DatastoreIp, config.DatastorePort)
 	echoServer := echo.New()
 
 	echoServer.GET("/health", func(c echo.Context) error {
@@ -104,7 +104,7 @@ func getPersonKeyFromIdString(idStr string) (string, error) {
 	return key, nil
 }
 
-func getNewPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo.Context) error {
+func getNewPersonHandler(client *datastore_service_client.DatastoreClient) func(ctx echo.Context) error {
 	return func(c echo.Context) error {
 		idStr := c.Param(personIdParam)
 		key, err := getPersonKeyFromIdString(idStr)
@@ -137,7 +137,7 @@ func getNewPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 	}
 }
 
-func getGetPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo.Context) error {
+func getGetPersonHandler(client *datastore_service_client.DatastoreClient) func(ctx echo.Context) error {
 	return func(c echo.Context) error {
 		idStr := c.Param(personIdParam)
 		key, err := getPersonKeyFromIdString(idStr)
@@ -164,7 +164,7 @@ func getGetPersonHandler(client *datastore_client.DatastoreClient) func(ctx echo
 	}
 }
 
-func getIncrementBooksReadHandler(client *datastore_client.DatastoreClient) func(ctx echo.Context) error {
+func getIncrementBooksReadHandler(client *datastore_service_client.DatastoreClient) func(ctx echo.Context) error {
 	return func(c echo.Context) error {
 		idStr := c.Param(personIdParam)
 		key, err := getPersonKeyFromIdString(idStr)
