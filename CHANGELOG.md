@@ -1,4 +1,4 @@
-# TBD
+# 1.0.9
 * Add datastore getters for fields ipAddr and port. Users can use these getters to obtain the current values of each field
 
 # 1.0.8
