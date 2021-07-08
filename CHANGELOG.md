@@ -1,3 +1,6 @@
+# 1.0.8
+* Add datastore service and api service clients package. Users can import these packages and use them to interact with the services
+
 ## 1.0.7
 * Add validation to the API service's config file
 
