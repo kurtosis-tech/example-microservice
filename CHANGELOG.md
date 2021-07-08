@@ -1,3 +1,6 @@
+# TBD
+* Add datastore getters for fields ipAddr and port. Users can use these getters to obtain the current values of each field
+
 # 1.0.8
 * Add datastore service and api service clients package. Users can import these packages and use them to interact with the services
 
