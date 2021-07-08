@@ -39,6 +39,20 @@ func NewDatastoreClient(ipAddr string, port int) *DatastoreClient {
 }
 
 /*
+Get client's IP address value
+*/
+func (client *DatastoreClient) IpAddr() string {
+	return client.ipAddr
+}
+
+/*
+Get client's port value
+*/
+func (client *DatastoreClient) Port() int {
+	return client.port
+}
+
+/*
 Checks if a given key Exists
 */
 func (client *DatastoreClient) Exists(key string) (bool, error) {
